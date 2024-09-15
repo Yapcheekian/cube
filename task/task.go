@@ -32,7 +32,7 @@ type Task struct {
 	Name          string
 	State         State
 	Image         string
-	CPU           float64
+	Cpu           float64
 	Memory        int64
 	Disk          int64
 	ExposedPorts  nat.PortSet
@@ -64,9 +64,30 @@ type Config struct {
 	RestartPolicy string
 }
 
+func NewConfig(t *Task) *Config {
+	return &Config{
+		Name:          t.Name,
+		ExposedPorts:  t.ExposedPorts,
+		Image:         t.Image,
+		Cpu:           t.Cpu,
+		Memory:        t.Memory,
+		Disk:          t.Disk,
+		RestartPolicy: t.RestartPolicy,
+	}
+}
+
 type Docker struct {
 	Client *client.Client
 	Config Config
+}
+
+func NewDocker(c *Config) *Docker {
+	dc, _ := client.NewClientWithOpts(client.FromEnv)
+
+	return &Docker{
+		Client: dc,
+		Config: *c,
+	}
 }
 
 func (d *Docker) Run() DockerResult {
@@ -134,7 +155,7 @@ func (d *Docker) Run() DockerResult {
 	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
 
 	return DockerResult{
-		ContainerId: resp.ID,
+		ContainerID: resp.ID,
 		Action:      "start",
 		Result:      "success",
 	}
@@ -164,6 +185,6 @@ func (d *Docker) Stop(id string) DockerResult {
 type DockerResult struct {
 	Error       error
 	Action      string
-	ContainerId string
+	ContainerID string
 	Result      string
 }
